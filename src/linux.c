@@ -674,13 +674,22 @@ make_mac_path(uint8_t *buf, ssize_t size, const char * const ifname)
 	if (rc < 0)
 	        goto err;
 
+	/* HID of PCI Root is always PNP0A03. */
+	sz = efidp_make_acpi_hid(buf, size, EFIDP_ACPI_PCI_ROOT_HID, 0);
+	off += sz;
+
+	char *current = dev.link + strlen("../../devices/pci0000:00/");
+	sz = pci_parser.parse(&dev, current, dev.link);
+	if (sz < 0)
+	    goto err;
+
 	sz = pci_parser.create(&dev, buf, size, off);
 	if (sz < 0)
 	        goto err;
 	off += sz;
 
 	sz = efidp_make_mac_addr(buf+off, size?size-off:0,
-	                         ifr.ifr_ifru.ifru_hwaddr.sa_family,
+	                         0,
 	                         (uint8_t *)ifr.ifr_ifru.ifru_hwaddr.sa_data,
 	                         sizeof(ifr.ifr_ifru.ifru_hwaddr.sa_data));
 	if (sz < 0)
